@@ -28,8 +28,14 @@ export function getSupabaseBucketName() {
   return process.env.SUPABASE_BUCKET_NAME || "badminton-bucket";
 }
 
+export function createStoragePath(registrationId: string, fileName: string) {
+  const extension = fileName.match(/\.[A-Za-z0-9]{1,10}$/)?.[0].toLowerCase() ?? "";
+
+  return `${registrationId}/${Date.now()}-${randomUUID()}${extension}`;
+}
+
 export async function uploadDocumentToStorage(input: UploadInput) {
-  const storagePath = `${input.registrationId}/${Date.now()}-${randomUUID()}-${input.fileName}`;
+  const storagePath = createStoragePath(input.registrationId, input.fileName);
   const supabase = getSupabaseStorageClient();
 
   const { error } = await supabase.storage
