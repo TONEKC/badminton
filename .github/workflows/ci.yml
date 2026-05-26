@@ -1,0 +1,30 @@
+name: CI
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/badminton?schema=public
+      SESSION_SECRET: ci-session-secret-at-least-16
+      ADMIN_USERNAME: admin
+      ADMIN_PASSWORD: admin1234
+      TOURNAMENT_NAME: Bangkok Badminton Open 2026
+      REGISTRATION_CLOSE_AT: 2099-12-31T16:59:59.000Z
+      SUPABASE_URL: https://example.supabase.co
+      SUPABASE_SERVICE_ROLE_KEY: ci-placeholder
+      SUPABASE_BUCKET_NAME: badminton-bucket
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build

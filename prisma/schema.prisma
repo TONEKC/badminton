@@ -1,0 +1,58 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum CompetitionCategory {
+  MENS_SINGLE
+  WOMENS_SINGLE
+  MENS_DOUBLE
+  WOMENS_DOUBLE
+  MIXED_DOUBLE
+}
+
+enum SkillLevel {
+  N
+  S
+  C
+}
+
+model Registration {
+  id            String              @id @default(cuid())
+  referenceCode String              @unique
+  fullName      String
+  phone         String
+  email         String
+  category      CompetitionCategory
+  skillLevel    SkillLevel
+  clubName      String
+  passwordHash  String
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+  documents     UploadedDocument[]
+
+  @@index([createdAt])
+  @@index([category, skillLevel])
+}
+
+model UploadedDocument {
+  id             String       @id @default(cuid())
+  registrationId String
+  fileName       String
+  storagePath    String       @unique
+  contentType    String
+  size           Int
+  createdAt      DateTime     @default(now())
+  registration   Registration @relation(fields: [registrationId], references: [id], onDelete: Cascade)
+
+  @@index([registrationId])
+}
