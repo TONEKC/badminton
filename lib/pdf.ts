@@ -113,7 +113,7 @@ export async function createPlayerBadgePdf(registration: BadgeRegistration) {
     ["Level", skillLevelLabels[registration.skillLevel]],
   ];
 
-  let y = 320;
+  let y = 330;
   for (const [label, value] of rows) {
     page.drawText(label.toUpperCase(), {
       x: 42,
@@ -132,20 +132,20 @@ export async function createPlayerBadgePdf(registration: BadgeRegistration) {
       thaiFont,
       color: rgb(1, 1, 1),
     });
-    y -= 72;
+    y -= 64;
   }
 
   page.drawRectangle({
     x: 42,
-    y: 54,
+    y: 42,
     width: 276,
-    height: 46,
+    height: 40,
     color: rgb(0.718, 0.961, 0.239),
   });
 
   page.drawText("CHECK-IN VERIFIED", {
     x: 80,
-    y: 69,
+    y: 54,
     size: 16,
     font: latinFont,
     color: rgb(0.027, 0.067, 0.051),
