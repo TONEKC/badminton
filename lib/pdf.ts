@@ -3,7 +3,7 @@ import { getTournamentName } from "@/lib/rules";
 import fontkit from "@pdf-lib/fontkit";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import { PDFDocument, rgb } from "pdf-lib";
+import { PDFDocument, PDFFont, PDFPage, StandardFonts, rgb } from "pdf-lib";
 import type { CompetitionCategory, SkillLevel } from "@/lib/generated/prisma/enums";
 
 type BadgeRegistration = {
@@ -14,6 +14,44 @@ type BadgeRegistration = {
   skillLevel: SkillLevel;
 };
 
+function splitTextByScript(text: string) {
+  return text.match(/[\u0E00-\u0E7F]+|[^\u0E00-\u0E7F]+/g) ?? [text];
+}
+
+function drawTextWithFonts({
+  page,
+  text,
+  x,
+  y,
+  size,
+  latinFont,
+  thaiFont,
+  color,
+}: {
+  page: PDFPage;
+  text: string;
+  x: number;
+  y: number;
+  size: number;
+  latinFont: PDFFont;
+  thaiFont: PDFFont;
+  color: ReturnType<typeof rgb>;
+}) {
+  let currentX = x;
+
+  for (const chunk of splitTextByScript(text)) {
+    const font = /[\u0E00-\u0E7F]/.test(chunk) ? thaiFont : latinFont;
+    page.drawText(chunk, {
+      x: currentX,
+      y,
+      size,
+      font,
+      color,
+    });
+    currentX += font.widthOfTextAtSize(chunk, size);
+  }
+}
+
 export async function createPlayerBadgePdf(registration: BadgeRegistration) {
   const pdf = await PDFDocument.create();
   pdf.registerFontkit(fontkit);
@@ -21,7 +59,8 @@ export async function createPlayerBadgePdf(registration: BadgeRegistration) {
   const fontBytes = await readFile(
     path.join(process.cwd(), "public/fonts/NotoSansThai-Regular.ttf"),
   );
-  const bold = await pdf.embedFont(fontBytes);
+  const thaiFont = await pdf.embedFont(fontBytes);
+  const latinFont = await pdf.embedFont(StandardFonts.HelveticaBold);
 
   page.drawRectangle({
     x: 0,
@@ -40,11 +79,14 @@ export async function createPlayerBadgePdf(registration: BadgeRegistration) {
     borderWidth: 3,
   });
 
-  page.drawText(getTournamentName(), {
+  drawTextWithFonts({
+    page,
+    text: getTournamentName(),
     x: 38,
     y: 466,
     size: 15,
-    font: bold,
+    latinFont,
+    thaiFont,
     color: rgb(0.718, 0.961, 0.239),
   });
 
@@ -52,7 +94,7 @@ export async function createPlayerBadgePdf(registration: BadgeRegistration) {
     x: 38,
     y: 428,
     size: 30,
-    font: bold,
+    font: latinFont,
     color: rgb(1, 1, 1),
   });
 
@@ -60,7 +102,7 @@ export async function createPlayerBadgePdf(registration: BadgeRegistration) {
     x: 38,
     y: 392,
     size: 18,
-    font: bold,
+    font: latinFont,
     color: rgb(0.718, 0.961, 0.239),
   });
 
@@ -77,14 +119,17 @@ export async function createPlayerBadgePdf(registration: BadgeRegistration) {
       x: 42,
       y,
       size: 10,
-      font: bold,
+      font: latinFont,
       color: rgb(0.62, 0.7, 0.66),
     });
-    page.drawText(value, {
+    drawTextWithFonts({
+      page,
+      text: value,
       x: 42,
       y: y - 28,
       size: value.length > 24 ? 17 : 21,
-      font: bold,
+      latinFont,
+      thaiFont,
       color: rgb(1, 1, 1),
     });
     y -= 72;
@@ -102,7 +147,7 @@ export async function createPlayerBadgePdf(registration: BadgeRegistration) {
     x: 80,
     y: 69,
     size: 16,
-    font: bold,
+    font: latinFont,
     color: rgb(0.027, 0.067, 0.051),
   });
 
